@@ -17,11 +17,18 @@
     "@remotion/shapes": "4.0.280",
     "@remotion/tailwind-v4": "4.0.280",
     "clsx": "2.1.1",
+    "file-saver": "^2.0.5",
+    "formidable": "^3.5.2",
+    "framer-motion": "^12.6.2",
+    "lamejs": "^1.2.1",
     "next": "15.1.6",
     "react": "19.0.0",
+    "react-cropper": "^2.3.3",
     "react-dom": "19.0.0",
+    "react-icons": "^5.5.0",
     "remotion": "4.0.280",
     "tailwind-merge": "3.0.1",
+    "wavesurfer.js": "^7.9.4",
     "zod": "3.22.3"
   },
   "devDependencies": {

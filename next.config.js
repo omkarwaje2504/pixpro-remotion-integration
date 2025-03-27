@@ -1,14 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: "export",
-  distDir:"dist",
+  // output: "export",
+  // distDir:"dist",
   experimental: {
     appDir: true,
   },
   images: {
-    domains: [],
-  },
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.example.com',
+      },
+    ],
+  }
 };
 
 module.exports = nextConfig;

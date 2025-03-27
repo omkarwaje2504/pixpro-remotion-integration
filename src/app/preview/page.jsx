@@ -6,7 +6,10 @@ export default function PreviewPage() {
   const [name, setName] = useState("");
 
   useEffect(() => {
-    setName(localStorage.getItem("name") || "Your Name");
+    const data = JSON.parse(localStorage.getItem("formData"))
+    console.log(data)
+    const name = data.doctorDetails.name
+    setName(name || "Your Name");
   }, []);
 
   return (
