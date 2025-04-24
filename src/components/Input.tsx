@@ -1,24 +1,16 @@
-import React, { useCallback } from "react";
+"use client";
 
-export const Input: React.FC<{
-  text: string;
-  setText: React.Dispatch<React.SetStateAction<string>>;
-  disabled?: boolean;
-}> = ({ text, setText, disabled }) => {
-  const onChange: React.ChangeEventHandler<HTMLInputElement> = useCallback(
-    (e) => {
-      setText(e.currentTarget.value);
-    },
-    [setText],
-  );
+import React from "react";
+
+function Input({ label, placeholder }: { label: string; placeholder: string }) {
+  console.log("Label:", label, "Placeholder:", placeholder);
 
   return (
-    <input
-      className="leading-[1.7] block w-full rounded-geist bg-background p-geist-half text-foreground text-sm border border-unfocused-border-color transition-colors duration-150 ease-in-out focus:border-focused-border-color outline-none"
-      disabled={disabled}
-      name="title"
-      value={text}
-      onChange={onChange}
-    />
+    <div className="bg-white flex flex-col space-y-2">
+      <label className="text-black">{label}</label>
+      <input placeholder={placeholder} className="bg-white border p-2" />
+    </div>
   );
-};
+}
+
+export default Input;
