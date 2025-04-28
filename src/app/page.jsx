@@ -26,6 +26,7 @@ export default async function Home({ params }) {
   try {
     const projectInfo = {
       "id": "k4qw1jng",
+      
       "name": "Bigiviz",
       "company": "ABC",
       "deliverable": "e-video",
@@ -149,7 +150,34 @@ export default async function Home({ params }) {
           "name": "speciality",
           "label": "speciality",
           "type": "text",
-          "placeholder": null,
+          "placeholder": "Enter Speciality",
+          "hint": null,
+          "options": null,
+          "default": null,
+          "validations": {
+            "required": true,
+            "min": null,
+            "max": null,
+            "max_lines": null,
+            "max_per_line": null
+          },
+          "config": {
+            "hide_csv": false,
+            "hide_pdf": false,
+            "edit_not_allowed": null,
+            "not_equal_to_mobile": null,
+            "backstage_only": null,
+            "title_case": null,
+            "backstage_optional": false
+          },
+          "helper": null
+        },
+        "Date of birth": {
+          "id": "n1l0de8z23",
+          "name": "Date of birth",
+          "label": "Date of birth",
+          "type": "date",
+          "placeholder": "Enter DOB",
           "hint": null,
           "options": null,
           "default": null,

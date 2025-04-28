@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,7 +19,13 @@
         "name": "next"
       }
     ],
-    "incremental": true
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@utils/*": ["utils/*"],
+      "@actions/*": ["actions/*"],
+    }
   },
   "include": [
     "**/*.ts",
@@ -35,9 +37,6 @@
     "src/app/preview/index.jsx",
     "src/app/preview/index.jsx",
     "dist/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "remotion.config.ts"
-  ]
+, "src/components/Input.jsx"  ],
+  "exclude": ["node_modules", "remotion.config.ts"]
 }
