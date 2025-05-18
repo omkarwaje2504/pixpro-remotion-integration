@@ -1,16 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   // output: "export",
   // distDir:"dist",
-  experimental: {
-    appDir: true,
-  },
+  // experimental: {
+  //   appDir: true,
+  // },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'cdn.example.com',
+        hostname: 'img.freepik.com',
       },
     ],
   }
