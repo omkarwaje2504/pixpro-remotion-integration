@@ -8,6 +8,7 @@ import MemberTable from "@components/MemberTable";
 import Footer from "@components/Footer";
 import Header from "@components/Header";
 import LoadingPage from "@components/LoadingPage";
+import Link from "next/link";
 // Mock data for demonstration
 const userInfo = {
   name: "John Doe",
@@ -112,9 +113,11 @@ const HomePage = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row  sm:space-y-0 sm:space-x-3 w-full md:w-auto">
-            <Button type="button" fullWidth={false} leftIcon={<FaUserPlus />}>
-              Add New Client
-            </Button>
+            <Link href="/client">
+              <Button type="button" fullWidth={false} leftIcon={<FaUserPlus />}>
+                Add New Client
+              </Button>
+            </Link>
           </div>
         </div>
 
