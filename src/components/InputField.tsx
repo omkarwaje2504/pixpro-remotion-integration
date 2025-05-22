@@ -51,7 +51,6 @@ const InputField: React.FC<InputFieldProps> = ({
   name,
 }) => {
   const [error, setError] = useState<string>("");
-
   useEffect(() => {
     if (validation.regex && value) {
       const isValid = validation.regex.test(value);
@@ -92,7 +91,6 @@ const InputField: React.FC<InputFieldProps> = ({
       syntheticEvent as ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     );
   };
-
   return (
     <div className="mb-4">
       <label
@@ -131,8 +129,8 @@ const InputField: React.FC<InputFieldProps> = ({
                 className={`flex items-center gap-2 px-4 mr-2 py-2 rounded-lg border cursor-pointer transition-all
               ${
                 isSelected
-                  ? `${config.theme.selectedGradient} ${config.theme.selectedText}`
-                  : `${config.theme.unselectedBorder} ${config.theme.unselectedText}`
+                  ? `${config().theme.selectedGradient} ${config().theme.selectedText}`
+                  : `${config().theme.unselectedBorder} ${config().theme.unselectedText}`
               }`}
               >
                 <input
@@ -145,11 +143,11 @@ const InputField: React.FC<InputFieldProps> = ({
                 />
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
-                ${isSelected ? config.theme.dotBorder + " bg-white" : config.theme.unselectedBorder}`}
+                ${isSelected ? config().theme.dotBorder + " bg-white" : config().theme.unselectedBorder}`}
                 >
                   {isSelected && (
                     <div
-                      className={`w-2.5 h-2.5 ${config.theme.selectedDot} rounded-full`}
+                      className={`w-2.5 h-2.5 ${config().theme.selectedDot} rounded-full`}
                     />
                   )}
                 </div>
@@ -186,9 +184,8 @@ const InputField: React.FC<InputFieldProps> = ({
           />
         </div>
       )}
-
       {showCharCount && maxLength !== undefined && (
-        <p className="text-xs text-gray-400 text-right">
+        <p className="text-xs text-gray-400 text-right mt-1">
           {value.length}/{maxLength}
         </p>
       )}

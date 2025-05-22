@@ -27,7 +27,7 @@ const Button: React.FC<ButtonProps> = ({
   const buttonColor =
     isLoading || disabled
       ? "bg-gray-400 cursor-not-allowed"
-      : `${config.theme.selectedBg} ${config.theme.selectedText}`;
+      : `${config().theme.selectedBg} ${config().theme.selectedText} `;
 
   const finalClass = `${baseClasses} ${buttonColor} ${
     fullWidth ? "w-full" : ""
