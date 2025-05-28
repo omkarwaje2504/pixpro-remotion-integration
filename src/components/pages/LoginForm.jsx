@@ -1,38 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import InputField from "@components/InputField";
-import Button from "@components/Button";
+import InputField from "@components/ui/InputField";
+import Button from "@components/ui/Button";
 import { FaTicketAlt, FaLock, FaMobileAlt, FaUser } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import config from "@utils/Config";
 import { LoginSubmission } from "@actions/loginApis";
+import { DecryptData, EncryptData } from "@utils/cryptoUtils";
 
 const validations = {
   code: {
     regex: /^[A-Z0-9]{4,10}$/,
-    message: "Enter a valid access code (4–10 numbers).",
+    message: "Enter a valid access code (4–10 uppercase letters/numbers).",
   },
   password: {
     regex: /^.{6,}$/,
     message: "Password must be at least 6 characters.",
   },
   mobile: {
-    regex: /^[6-9]\d{9}$/,
+    regex: /^(?:\+91|91|0)?[6-9]\d{9}$/,
     message: "Enter a valid 10-digit mobile number.",
   },
 };
 
-const LoginForm = ({ loginType }) => {
+const LoginForm = ({ ui, loginType }) => {
   const [formData, setFormData] = useState({
     code: "",
     password: "",
     mobile: "",
   });
+  const [validationStatus, setValidationStatus] = useState({
+    code: false,
+    password: false,
+    mobile: false,
+  });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-
+  const id = localStorage.getItem("projectHash");
   const handleChange = (key) => (e) => {
     const { type, value, files } = e.target;
     const finalValue = type === "file" ? files?.[0]?.name || "" : value;
@@ -43,63 +49,50 @@ const LoginForm = ({ loginType }) => {
     }));
   };
 
+  const handleValidationChange = (key) => (isValid) => {
+    setValidationStatus((prev) => ({
+      ...prev,
+      [key]: isValid,
+    }));
+  };
+
+  const isFormValid = () => {
+    if (loginType === "code") return validationStatus.code;
+    if (loginType === "code-password")
+      return validationStatus.code && validationStatus.password;
+    if (loginType === "mobile") return validationStatus.mobile;
+    return false;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
-    const newErrors = {};
 
-    if (loginType === "code" || loginType === "code-password") {
-      const codeRule = validations.code;
-      if (!codeRule.regex.test(formData.code)) {
-        newErrors.code = codeRule.message;
-      }
-    }
-
-    if (loginType === "code-password") {
-      const passRule = validations.password;
-      if (!passRule.regex.test(formData.password)) {
-        newErrors.password = passRule.message;
-      }
-    }
-
-    if (loginType === "mobile") {
-      const mobileRule = validations.mobile;
-      if (!mobileRule.regex.test(formData.mobile)) {
-        newErrors.mobile = mobileRule.message;
-      }
-    }
-
-    // If any errors found, stop form submit
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setIsSubmitting(false);
-      return;
+    const loginResponse = await LoginSubmission(formData);
+    if (loginResponse) {
+      router.push(`/${id}/homepage`);
     } else {
-      // If no errors, proceed with form submission
-      const loginResponse = await LoginSubmission(formData);
-      if (loginResponse) {
-        router.push("/homepage");
-      } else {
-        setErrors({ form: "Login failed. Please try again." });
-      }
+      setErrors({ form: "Login failed. Please try again." });
     }
+    setIsSubmitting(false);
   };
 
   return (
-    <div className="mt-8 space-y-6">
-      <form>
+    <div className="mt-8 space-y-6 text-gray-800 dark:text-gray-100">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {loginType === "code" && (
           <InputField
             id="code"
-            label={config().loginPage.loginLabel}
+            label={ui.loginPage.loginLabel}
             icon={<FaTicketAlt className="text-gray-400" />}
             type="text"
             value={formData.code}
             onChange={handleChange("code")}
             validation={validations.code}
+            onValidationChange={handleValidationChange("code")}
             required
+            disabled={isSubmitting}
           />
         )}
 
@@ -107,23 +100,27 @@ const LoginForm = ({ loginType }) => {
           <>
             <InputField
               id="code"
-              label={config().loginPage.loginLabel}
+              label={ui.loginPage.loginLabel}
               icon={<FaTicketAlt className="text-gray-400" />}
               type="text"
               value={formData.code}
               onChange={handleChange("code")}
               validation={validations.code}
+              onValidationChange={handleValidationChange("code")}
               required
+              disabled={isSubmitting}
             />
             <InputField
               id="password"
-              label="Password"
+              label={ui.loginPage.passwordLabel}
               icon={<FaLock className="text-gray-400" />}
               type="password"
               value={formData.password}
               onChange={handleChange("password")}
               validation={validations.password}
+              onValidationChange={handleValidationChange("password")}
               required
+              disabled={isSubmitting}
             />
           </>
         )}
@@ -131,26 +128,34 @@ const LoginForm = ({ loginType }) => {
         {loginType === "mobile" && (
           <InputField
             id="mobile"
-            label="Mobile Number"
+            label={ui.loginPage.mobileLabel}
             icon={<FaMobileAlt className="text-gray-400" />}
             type="tel"
             value={formData.mobile}
             onChange={handleChange("mobile")}
             validation={validations.mobile}
+            onValidationChange={handleValidationChange("mobile")}
             required
+            disabled={isSubmitting}
           />
+        )}
+
+        {errors.form && (
+          <p className="text-red-600 dark:text-red-400 text-sm">
+            {errors.form}
+          </p>
         )}
 
         <div>
           <Button
             type="submit"
-            onClick={handleSubmit}
             isLoading={isSubmitting}
+            disabled={!isFormValid() || isSubmitting}
             leftIcon={
               <FaUser className="text-red-300 group-hover:text-red-200" />
             }
           >
-            {config().loginPage.loginButtomLabel}
+            {ui.loginPage.loginButtomLabel}
           </Button>
         </div>
       </form>

@@ -1,9 +1,10 @@
 "use client";
-import Footer from "@components/Footer";
-import Header from "@components/Header";
-import InputField from "@components/InputField";
-import PhotoUpload from "@components/PhotoUpload";
-import { useState } from "react";
+import Footer from "@components/ui/Footer";
+import Header from "@components/ui/Header";
+import InputField from "@components/ui/InputField";
+import PhotoUpload from "@components/ui/PhotoUpload";
+import { DecryptData, EncryptData } from "@utils/cryptoUtils";
+import { useEffect, useState } from "react";
 import {
   FaCheck,
   FaTimes,
@@ -151,6 +152,7 @@ const RenderStepContent = ({ currentStep }) => {
     showTimes: "",
     consent: false,
   });
+
 
   switch (currentStep) {
     case 1:
@@ -470,4 +472,3 @@ const RenderStepContent = ({ currentStep }) => {
       return null;
   }
 };
-
