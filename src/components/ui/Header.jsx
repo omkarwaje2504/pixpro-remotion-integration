@@ -1,12 +1,25 @@
+"use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaFilm, FaSignOutAlt } from "react-icons/fa";
-import { FaLocationArrow } from "react-icons/fa";
+import { FaFilm, FaSignOutAlt, FaLocationArrow } from "react-icons/fa";
+import { useEffect, useState } from "react";
+
+function useHeaderData() {
+  const pathname = usePathname();
+  const [projectHash, setProjectHash] = useState(null);
+
+  useEffect(() => {
+    const hash = localStorage.getItem("projectHash");
+    setProjectHash(hash);
+  }, []);
+
+  const pathnamesArray = pathname?.split("/") || [];
+
+  return { pathname, pathnamesArray, projectHash };
+}
 
 const Header = ({ userInfo }) => {
-  const projectHash = localStorage.getItem("projectHash");
-  const pathnames = usePathname();
-  const pathnamesArray = pathnames.split("/");
+  const { pathnamesArray } = useHeaderData();
 
   return (
     <header className="bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
@@ -29,7 +42,7 @@ const Header = ({ userInfo }) => {
           <div className="flex items-center space-x-6">
             {userInfo.role === "NSM" && pathnamesArray.includes("homepage") ? (
               <div>
-                <Link href={`approval-dashboard`}>
+                <Link href="/approval-dashboard">
                   <p className="text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 transition-colors duration-200 flex gap-2 border p-2 rounded-md">
                     <FaLocationArrow className="mt-1" /> Approval Dashboard
                   </p>
@@ -38,15 +51,14 @@ const Header = ({ userInfo }) => {
             ) : userInfo.role === "NSM" &&
               pathnamesArray.includes("approval-dashboard") ? (
               <div>
-                <Link href={`homepage`}>
+                <Link href="/homepage">
                   <p className="text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 transition-colors duration-200 flex gap-2 border p-2 rounded-md">
                     <FaLocationArrow className="mt-1" /> Go to Home
                   </p>
                 </Link>
               </div>
-            ) : (
-              ""
-            )}
+            ) : null}
+
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 text-white flex items-center justify-center text-sm font-bold">
                 {userInfo.name.charAt(0)}

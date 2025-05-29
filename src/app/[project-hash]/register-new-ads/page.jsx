@@ -53,7 +53,7 @@ export default function DoctorAdForm() {
 
           <RenderStepIndicator currentStep={currentStep} />
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(e)=>handleSubmit(e)}
             className="bg-gray-900 rounded-lg p-4 border border-gray-800"
           >
             <RenderStepContent currentStep={currentStep} />
