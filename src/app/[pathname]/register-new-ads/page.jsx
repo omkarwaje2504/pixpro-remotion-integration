@@ -1,5 +1,5 @@
 import { FetchProjects } from "@actions/project";
-import HomePage from "@components/pages/HomePage";
+import RegisterNewCandidate from "@components/pages/RegisterNewCandidate";
 
 export async function generateStaticParams() {
   const pathnames = ["1", "2", "3", "4", "5"];
@@ -32,7 +32,7 @@ export default async function Home({ params }) {
   const pathname = 1;
   try {
     const projectInfo = await FetchProjects(`${pathname}`);
-    return <HomePage projectData={projectInfo} />;
+    return <RegisterNewCandidate projectData={projectInfo} />;
   } catch (error) {
     throw new Error("Failed to load project information", error);
   }

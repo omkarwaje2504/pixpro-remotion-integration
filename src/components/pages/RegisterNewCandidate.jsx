@@ -2,19 +2,15 @@
 import Footer from "@components/ui/Footer";
 import Header from "@components/ui/Header";
 import InputField from "@components/ui/InputField";
-import PhotoUpload from "@components/ui/PhotoUpload";
+import PhotoUploadEditor from "@components/ui/PhotoUpload";
 import { DecryptData, EncryptData } from "@utils/cryptoUtils";
+import RenderStepIndicator from "@components/ui/RenderStepIndicator";
+import FormNavigationButtons from "@components/ui/FormNavigationButtons";
+import AudioUploadEditor from "@components/ui/AudioUploadEditor";
 import { useEffect, useState } from "react";
 import {
   FaCheck,
   FaTimes,
-  FaUpload,
-  FaFilm,
-  FaMapMarkerAlt,
-  FaUserMd,
-  FaCalendarAlt,
-  FaClock,
-  FaImage,
   FaMicrophone,
   FaChevronRight,
   FaChevronLeft,
@@ -24,17 +20,16 @@ import {
 const userInfo = {
   name: "John Doe",
   role: "Admin",
-  avatar: "/images/avatar.jpg", // This would be a real path in your project
+  avatar: "/images/avatar.jpg",
 };
 
-export default function DoctorAdForm() {
+export default function RegisterNewCandidate({ projectData }) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [photoUploadStatus, setPhotoUploadStatus] = useState(false);
+  const [audioUploadStatus, setAudioUploadStatus] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Process form submission here
-    console.log("Form submitted:");
-    // Reset form and show success message
     alert("Advertisement submitted successfully!");
   };
 
@@ -53,14 +48,19 @@ export default function DoctorAdForm() {
 
           <RenderStepIndicator currentStep={currentStep} />
           <form
-            onSubmit={(e)=>handleSubmit(e)}
+            onSubmit={(e) => handleSubmit(e)}
             className="bg-gray-900 rounded-lg p-4 border border-gray-800"
           >
-            <RenderStepContent currentStep={currentStep} />
+            <RenderStepContent
+              currentStep={currentStep}
+              setPhotoUploadStatus={setPhotoUploadStatus}
+              setAudioUploadStatus={setAudioUploadStatus}
+            />
 
-            <NavigationButtons
+            <FormNavigationButtons
               currentStep={currentStep}
               setCurrentStep={setCurrentStep}
+              photoUploadStatus={photoUploadStatus}
             />
           </form>
         </div>
@@ -70,81 +70,18 @@ export default function DoctorAdForm() {
   );
 }
 
-const RenderStepIndicator = ({ currentStep }) => {
-  return (
-    <div className="flex justify-center mb-4">
-      <div className="flex items-center space-x-4">
-        {[1, 2, 3, 4].map((step) => (
-          <div key={step} className="flex items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === step
-                  ? "bg-red-600 text-white"
-                  : currentStep > step
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-700 text-gray-400"
-              }`}
-            >
-              {currentStep > step ? <FaCheck size={16} /> : step}
-            </div>
-            {step < 4 && (
-              <div
-                className={`w-12 h-1 ${
-                  currentStep > step ? "bg-green-500" : "bg-gray-700"
-                }`}
-              ></div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const NavigationButtons = ({ currentStep, setCurrentStep }) => {
-  return (
-    <div className="mt-8 flex justify-between">
-      {currentStep > 1 && (
-        <button
-          type="button"
-          onClick={() => setCurrentStep(currentStep - 1)}
-          className="flex items-center bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded"
-        >
-          <FaChevronLeft size={16} className="mr-1" />
-          Back
-        </button>
-      )}
-
-      {currentStep < 4 ? (
-        <button
-          type="button"
-          onClick={() => setCurrentStep(currentStep + 1)}
-          className="flex items-center ml-auto bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
-        >
-          Next
-          <FaChevronRight size={16} className="ml-1" />
-        </button>
-      ) : (
-        <button
-          type="submit"
-          className="flex items-center ml-auto bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
-          disabled={!formData.consent}
-        >
-          Submit Advertisement
-          <FaChevronRight size={16} className="ml-1" />
-        </button>
-      )}
-    </div>
-  );
-};
-
-const RenderStepContent = ({ currentStep }) => {
+const RenderStepContent = ({
+  currentStep,
+  setPhotoUploadStatus,
+  setAudioUploadStatus,
+}) => {
   const [formData, setFormData] = useState({
     name: "",
-    specialty: "",
-    bio: "",
-    experience: "",
-    education: "",
+    speciality: "",
+    degree: "",
+    clinic_name: "",
+    clinic_location: "",
+    logo: "",
     photo: null,
     audio: null,
     theaterPreference: "",
@@ -153,6 +90,28 @@ const RenderStepContent = ({ currentStep }) => {
     consent: false,
   });
 
+  const [audioName, setAudioName] = useState("");
+
+  const [validationStatus, setValidationStatus] = useState({
+    name: false,
+    speciality: false,
+    bio: false,
+  });
+
+  const handleValidationChange = (key) => (isValid) => {
+    setValidationStatus((prev) => ({
+      ...prev,
+      [key]: isValid,
+    }));
+  };
+
+  const isFormValid = () => {
+    if (loginType === "code") return validationStatus.code;
+    if (loginType === "code-password")
+      return validationStatus.code && validationStatus.password;
+    if (loginType === "mobile") return validationStatus.mobile;
+    return false;
+  };
 
   switch (currentStep) {
     case 1:
@@ -179,9 +138,9 @@ const RenderStepContent = ({ currentStep }) => {
                 id="specialty"
                 label="Specialty*"
                 type="select"
-                value={formData.specialty}
+                value={formData.speciality}
                 onChange={(e) =>
-                  setFormData({ ...formData, specialty: e.target.value })
+                  setFormData({ ...formData, speciality: e.target.value })
                 }
                 required
                 options={[
@@ -202,33 +161,46 @@ const RenderStepContent = ({ currentStep }) => {
           </div>
           <div>
             <InputField
-              id="bio"
-              label="Professional Bio*"
+              id="degree"
+              label="Degree*"
               type="text"
-              value={formData.bio}
+              value={formData.degree}
               onChange={(e) =>
-                setFormData({ ...formData, bio: e.target.value })
+                setFormData({ ...formData, degree: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div>
+            <InputField
+              id="clinic_name"
+              label="Clinic Name*"
+              type="text"
+              value={formData.clinic_name}
+              onChange={(e) =>
+                setFormData({ ...formData, clinic_name: e.target.value })
               }
               required
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InputField
-              id="experience"
-              label="Years of Experience"
-              type="number"
-              value={formData.experience}
+              id="clinic_location"
+              label="Clinic Location*"
+              type="text"
+              required
+              value={formData.clinic_location}
               onChange={(e) =>
-                setFormData({ ...formData, experience: e.target.value })
+                setFormData({ ...formData, clinic_location: e.target.value })
               }
             />
             <InputField
-              id="education"
-              label="Education"
-              type="text"
-              value={formData.education}
+              id="logo"
+              label="Want to upload a logo?"
+              type="file"
+              value={formData.logo}
               onChange={(e) =>
-                setFormData({ ...formData, education: e.target.value })
+                setFormData({ ...formData, logo: e.target.value })
               }
             />
           </div>
@@ -237,71 +209,13 @@ const RenderStepContent = ({ currentStep }) => {
     case 2:
       return (
         <div className="space-y-6">
-          <PhotoUpload />
+          <PhotoUploadEditor setPhotoUploadStatus={setPhotoUploadStatus} />
         </div>
       );
     case 3:
       return (
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-white">
-            Upload Advertisement Audio
-          </h2>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-            {audioName ? (
-              <div className="flex items-center justify-between bg-gray-700 rounded p-4">
-                <div className="flex items-center">
-                  <FaMicrophone className="text-gray-300 mr-3" />
-                  <span className="text-white">{audioName}</span>
-                </div>
-                <button
-                  onClick={removeAudio}
-                  className="bg-red-600 rounded-full p-1"
-                >
-                  <FaTimes size={16} color="white" />
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
-                <FaMicrophone
-                  className="mx-auto mb-4 text-gray-400"
-                  size={48}
-                />
-                <p className="text-gray-300 mb-4">
-                  Drag and drop your audio file here, or click to browse
-                </p>
-                <p className="text-gray-400 text-sm mb-4">
-                  MP3 or WAV format, max 30 seconds, max 10MB
-                </p>
-                <label className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded cursor-pointer">
-                  Browse Files
-                  <input
-                    type="file"
-                    onChange={handleAudioUpload}
-                    className="hidden"
-                    accept=".mp3,.wav"
-                  />
-                </label>
-              </div>
-            )}
-          </div>
-          <div className="text-gray-400 text-sm">
-            <p>* Audio will be played before movie trailers</p>
-            <p>* Keep your message clear, concise and professional</p>
-            <p>
-              * Recommended script structure: Introduction, credentials,
-              services offered, location, contact information
-            </p>
-          </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-            <h3 className="text-white font-medium mb-2">Audio Guidelines</h3>
-            <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
-              <li>Speak clearly at a moderate pace</li>
-              <li>Avoid background noise during recording</li>
-              <li>Include your name, specialty, and key services</li>
-              <li>Mention your clinic location and contact method</li>
-              <li>End with a clear call to action</li>
-            </ul>
-          </div>
+          <AudioUploadEditor setAudioUploadStatus={setAudioUploadStatus} />
         </div>
       );
     case 4:

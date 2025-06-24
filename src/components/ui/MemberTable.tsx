@@ -11,6 +11,8 @@ type Member = {
   id: string;
   name: string;
   imageUrl?: string;
+  approved_status?: number;
+  photo?: { url: string };
   speciality: string;
   status: "Active" | "Pending" | "Inactive";
   dateAdded: string;
@@ -53,7 +55,6 @@ const MemberTable: React.FC<MemberTableProps> = ({
     setFilteredMembers(result);
     setCurrentPage(1);
   }, [searchTerm, members]);
-
   const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
   const paginatedMembers = filteredMembers.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -107,7 +108,10 @@ const MemberTable: React.FC<MemberTableProps> = ({
 
       {/* Grid or List */}
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          key={currentPage}
+        >
           {paginatedMembers.map((member) => (
             <div
               key={member.id}
@@ -116,13 +120,14 @@ const MemberTable: React.FC<MemberTableProps> = ({
               <div className="p-2">
                 <div className="flex items-center gap-3">
                   <div className="w-24 h-24 relative overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
-                    {member.imageUrl ? (
+                    {member.photo?.url ? (
                       <Image
-                        src={member.imageUrl}
+                        src={member.photo?.url}
                         alt={member.name}
                         layout="fill"
                         objectFit="cover"
                         className="opacity-50 object-top"
+                        sizes="(max-width: 640px) 100px, (min-width: 641px) 150px, (min-width: 1024px) 200px"
                       />
                     ) : (
                       <FaFilm className="text-4xl text-gray-400" />
@@ -131,14 +136,14 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   <div>
                     <span
                       className={`text-xs font-medium px-1 py-0.5 rounded ${
-                        member.status === "Active"
+                        member.approved_status === 1
                           ? "bg-green-500/20 text-green-600 dark:text-green-400"
-                          : member.status === "Pending"
+                          : member.approved_status === 0
                             ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
                             : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
                       }`}
                     >
-                      {member.status}
+                      {member.approved_status === 1 ? "Approved" : " Pending"}
                     </span>
                     <h3 className="font-bold text-lg">{member.name}</h3>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">

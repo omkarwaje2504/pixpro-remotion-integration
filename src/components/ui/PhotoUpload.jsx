@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useRef, useState, ChangeEvent } from "react";
-import { Cropper, CropperRef, CircleStencil } from "react-advanced-cropper";
+import { useEffect, useRef, useState } from "react";
+import { Cropper, CircleStencil } from "react-advanced-cropper";
 import "react-advanced-cropper/dist/style.css";
 import "./styles.scss";
 import { getMimeType } from "advanced-cropper/extensions/mimes";
 import {
-  FaUpload,
   FaTrashAlt,
   FaRedo,
   FaSearchPlus,
@@ -21,42 +20,37 @@ import {
 } from "react-icons/fa";
 import Button from "./Button";
 
-export default function PhotoUploadEditor() {
+export default function PhotoUploadEditor({ setPhotoUploadStatus }) {
   const imageRef = useRef(null);
-  const containerRef = useRef(null);
   const inputRef = useRef(null);
   const cropperRef = useRef(null);
 
   const [image, setImage] = useState(null);
-  const [originalImage, setOriginalImage] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
-  const [filter, setFilter] = useState("none");
   const [editMode, setEditMode] = useState(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [filename, setFilename] = useState("");
+  const [contrast, setContrast] = useState(100);
+  const [brightness, setBrightness] = useState(100);
+  const [saturate, setSaturate] = useState(100);
+  const [originalFile, setOriginalFile] = useState(null);
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
 
-  const filters = [
-    { name: "None", value: "none", style: {} },
-    {
-      name: "Contrast",
-      value: "contrast",
-      style: { filter: "contrast(150%)" },
-    },
-    {
-      name: "Brightness",
-      value: "brightness",
-      style: { filter: "brightness(120%)" },
-    },
-    {
-      name: "Saturate",
-      value: "saturate",
-      style: { filter: "saturate(200%)" },
-    },
-  ];
-
-  const currentFilterStyle =
-    filters.find((f) => f.value === filter)?.style || {};
+  useEffect(() => {
+    if (unsavedChanges) {
+      setPhotoUploadStatus(false);
+    } else {
+      setPhotoUploadStatus(false);
+    }
+  }, [unsavedChanges]);
+  const currentFilterStyle = {
+    filter: `
+    contrast(${contrast}%)
+    brightness(${brightness}%)
+    saturate(${saturate}%)
+  `,
+  };
 
   const onUpload = () => {
     inputRef.current?.click();
@@ -65,6 +59,7 @@ export default function PhotoUploadEditor() {
   const onLoadImage = (event) => {
     event.preventDefault();
     const file = event.target.files?.[0];
+    setOriginalFile(file);
     if (file) {
       const blob = URL.createObjectURL(file);
       const typeFallback = file.type;
@@ -75,12 +70,9 @@ export default function PhotoUploadEditor() {
           type: getMimeType(e.target?.result, typeFallback),
         });
 
-        setOriginalImage({
-          src: blob,
-          type: getMimeType(e.target?.result, typeFallback),
-        });
         setFilename(file.name);
         setEditMode("crop");
+        setUnsavedChanges(true);
       };
       reader.readAsArrayBuffer(file);
     }
@@ -89,44 +81,96 @@ export default function PhotoUploadEditor() {
 
   const rotateImage = (direction) => {
     setRotation((prev) => prev + 90 * direction);
+    setUnsavedChanges(true);
   };
 
   const handleZoom = (delta) => {
     setZoom((prev) => Math.max(0.5, Math.min(prev + delta * 0.1, 3)));
+    setUnsavedChanges(true);
   };
 
-  const handleFilterChange = (value) => {
-    setEditMode("");
-    setFilter(value);
-  };
   const resetEdits = () => {
-    if (originalImage) {
-      setImage(originalImage);
+    if (originalFile) {
+      const blob = URL.createObjectURL(originalFile);
+      setImage({
+        src: blob,
+        type: getMimeType(originalFile, originalFile.type),
+      });
     }
     setZoom(1);
     setRotation(0);
-    setFilter("none");
     setEditMode(null);
     setPosition({ x: 0, y: 0 });
+    setContrast(100);
+    setBrightness(100);
+    setSaturate(100);
+    setUnsavedChanges(true);
   };
 
   const toggleCropMode = () => {
     setEditMode((prev) => (prev === "crop" ? null : "crop"));
+    setUnsavedChanges(true);
   };
 
   const handleRemoveImage = () => {
     if (image?.src) URL.revokeObjectURL(image.src);
     setZoom(1);
     setRotation(0);
-    setFilter("none");
     setEditMode(null);
     setPosition({ x: 0, y: 0 });
     setImage(null);
-    setOriginalImage(null);
+
     setFilename("");
   };
   const saveCroppedImage = () => {
-    const canvas = cropperRef.current?.getCanvas();
+    console.log("Saving cropped image...");
+    let canvas = null;
+
+    if (editMode === "crop" && cropperRef.current) {
+      canvas = cropperRef.current.getCanvas();
+    } else if (imageRef.current) {
+      // Create a temporary canvas and draw the image with rotation, zoom, and filters
+      const imgElement = imageRef.current;
+      const tempCanvas = document.createElement("canvas");
+      const ctx = tempCanvas.getContext("2d");
+
+      // Calculate new dimensions
+      const size = Math.max(imgElement.naturalWidth, imgElement.naturalHeight);
+      tempCanvas.width = size;
+      tempCanvas.height = size;
+
+      ctx.clearRect(0, 0, size, size);
+
+      ctx.save();
+      ctx.translate(size / 2, size / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.scale(zoom, zoom);
+
+      // Apply filters
+      ctx.filter = `
+      contrast(${contrast}%)
+      brightness(${brightness}%)
+      saturate(${saturate}%)
+    `;
+
+      ctx.drawImage(
+        imgElement,
+        -imgElement.naturalWidth / 2,
+        -imgElement.naturalHeight / 2,
+      );
+      ctx.restore();
+
+      canvas = tempCanvas;
+      setContrast(100);
+      setBrightness(100);
+      setSaturate(100);
+      setUnsavedChanges(false);
+      setRotation(0);
+      setZoom(1);
+    }
+
+    console.log("Canvas:", canvas);
+
     if (canvas) {
       const dataUrl = canvas.toDataURL("image/png");
       const croppedImage = {
@@ -135,6 +179,8 @@ export default function PhotoUploadEditor() {
       };
       setImage(croppedImage);
       setEditMode(null);
+      setUnsavedChanges(false);
+      console.log("Image saved successfully!");
     }
   };
 
@@ -188,7 +234,7 @@ export default function PhotoUploadEditor() {
       ) : (
         <div className="space-y-4">
           <div className="bg-gray-800 rounded-lg p-4 flex flex-wrap gap-4 justify-between items-center">
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() => rotateImage(1)}
@@ -234,24 +280,72 @@ export default function PhotoUploadEditor() {
                 </button>
                 {editMode === "filter" && (
                   <div className="absolute top-full left-0 mt-2 bg-gray-800 rounded-lg shadow-lg p-4 z-50 w-64">
-                    <h3 className="text-white font-medium mb-2">Filters</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {filters.map((f) => (
-                        <button
-                          type="button"
-                          key={f.value}
-                          onClick={() => handleFilterChange(f.value)}
-                          className={`p-2 rounded text-center text-sm ${filter === f.value ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
-                        >
-                          {f.name}
-                        </button>
-                      ))}
+                    <h3 className="text-white font-medium mb-2">
+                      Adjust Filters
+                    </h3>
+
+                    <div className="mb-2">
+                      <label className="text-gray-300 text-sm">
+                        Contrast: {contrast}%
+                      </label>
+                      <input
+                        type="range"
+                        min="50"
+                        max="200"
+                        value={contrast}
+                        onChange={(e) => setContrast(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="mb-2">
+                      <label className="text-gray-300 text-sm">
+                        Brightness: {brightness}%
+                      </label>
+                      <input
+                        type="range"
+                        min="50"
+                        max="200"
+                        value={brightness}
+                        onChange={(e) => setBrightness(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="mb-2">
+                      <label className="text-gray-300 text-sm">
+                        Saturation: {saturate}%
+                      </label>
+                      <input
+                        type="range"
+                        min="50"
+                        max="200"
+                        value={saturate}
+                        onChange={(e) => setSaturate(e.target.value)}
+                        className="w-full"
+                      />
                     </div>
                   </div>
                 )}
               </div>
+              <button
+                type="button"
+                onClick={resetEdits}
+                className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg text-white md:hidden"
+                title="Reset Edits"
+              >
+                <FaSyncAlt size={20} />
+              </button>
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="bg-red-600 hover:bg-red-700 p-2 rounded-lg text-white md:hidden"
+                title="Remove Image"
+              >
+                <FaTrashAlt size={20} />
+              </button>
             </div>
-            <div className="flex gap-3">
+            <div className=" gap-3 hidden md:flex">
               <button
                 type="button"
                 onClick={resetEdits}
@@ -314,14 +408,21 @@ export default function PhotoUploadEditor() {
                 <span className="text-sm">Rotation: {rotation}°</span>
               </div>
             </div>
-            <Button
-              type="button"
-              fullWidth={false}
-              leftIcon={<FaSave size={20} className="mr-2" />}
-              onClick={saveCroppedImage}
-            >
-              Save Changes
-            </Button>
+            <div>
+              <Button
+                type="button"
+                fullWidth={false}
+                leftIcon={<FaSave size={20} className="mr-2" />}
+                onClick={saveCroppedImage}
+              >
+                Save Changes
+              </Button>
+              {unsavedChanges && (
+                <p className="text-yellow-400 text-xs mt-1 text-center">
+                  Unsaved Changes
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}

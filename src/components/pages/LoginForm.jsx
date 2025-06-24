@@ -11,7 +11,7 @@ import { DecryptData, EncryptData } from "@utils/cryptoUtils";
 
 const validations = {
   code: {
-    regex: /^[A-Z0-9]{4,10}$/,
+    regex: /^[A-Za-z0-9]{4,10}$/,
     message: "Enter a valid access code (4–10 uppercase letters/numbers).",
   },
   password: {
@@ -39,6 +39,8 @@ const LoginForm = ({ ui, loginType }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const id = localStorage.getItem("projectHash");
+  const projectData = DecryptData("projectData");
+
   const handleChange = (key) => (e) => {
     const { type, value, files } = e.target;
     const finalValue = type === "file" ? files?.[0]?.name || "" : value;
@@ -70,10 +72,15 @@ const LoginForm = ({ ui, loginType }) => {
     setErrors({});
 
     const loginResponse = await LoginSubmission(formData);
-    if (loginResponse) {
+
+    if (loginResponse.success) {
+      const empData = loginResponse.data.employee;
+      EncryptData('empData',empData);
       router.push(`/${id}/homepage`);
     } else {
-      setErrors({ form: "Login failed. Please try again." });
+      setErrors({
+        form: loginResponse.message || "Login failed. Please try again.",
+      });
     }
     setIsSubmitting(false);
   };

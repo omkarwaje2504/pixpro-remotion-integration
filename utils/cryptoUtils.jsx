@@ -14,6 +14,10 @@ export const DecryptData = (key) => {
   const cipherText = localStorage.getItem(key);
   const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+  if (!decryptedData) {
+    console.error("Decryption failed or data not found for key:", key);
+    return null;
+  }
   return JSON.parse(decryptedData);
 };
 

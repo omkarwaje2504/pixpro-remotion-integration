@@ -19,7 +19,7 @@ function useHeaderData() {
 }
 
 const Header = ({ userInfo }) => {
-  const { pathnamesArray } = useHeaderData();
+  const { pathnamesArray, projectHash } = useHeaderData();
 
   return (
     <header className="bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
@@ -40,18 +40,18 @@ const Header = ({ userInfo }) => {
 
           {/* Right User Info */}
           <div className="flex items-center space-x-6">
-            {userInfo.role === "NSM" && pathnamesArray.includes("homepage") ? (
+            {userInfo.role !== 1 && pathnamesArray.includes("homepage") ? (
               <div>
-                <Link href="/approval-dashboard">
+                <Link href={`/${projectHash}/approval-dashboard`}>
                   <p className="text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 transition-colors duration-200 flex gap-2 border p-2 rounded-md">
                     <FaLocationArrow className="mt-1" /> Approval Dashboard
                   </p>
                 </Link>
               </div>
-            ) : userInfo.role === "NSM" &&
+            ) : userInfo.role !== 1 &&
               pathnamesArray.includes("approval-dashboard") ? (
               <div>
-                <Link href="/homepage">
+                <Link href={`/${projectHash}/homepage`}>
                   <p className="text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 transition-colors duration-200 flex gap-2 border p-2 rounded-md">
                     <FaLocationArrow className="mt-1" /> Go to Home
                   </p>
@@ -60,21 +60,21 @@ const Header = ({ userInfo }) => {
             ) : null}
 
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 text-white flex items-center justify-center text-sm font-bold">
-                {userInfo.name.charAt(0)}
-              </div>
-              <div className="hidden md:block">
+              <div className="hidden md:block text-right">
                 <p className="font-medium text-gray-800 dark:text-white">
                   {userInfo.name}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {userInfo.role}
+                  {userInfo.designation}
                 </p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 text-white flex items-center justify-center text-sm font-bold uppercase">
+                {userInfo.name.charAt(0)}
               </div>
               <FaSignOutAlt
                 className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 cursor-pointer"
                 onClick={() => {
-                  window.location.href = "/";
+                  window.location.href = `/${projectHash}`;
                 }}
                 title="Sign out"
               />

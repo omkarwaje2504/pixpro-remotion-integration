@@ -10,9 +10,20 @@ import LoadingPage from "@components/ui/LoadingPage";
 import Dashboard from "@components/ui/Dashboard";
 import Link from "next/link";
 import Config from "@utils/Config";
+import { DecryptData } from "@utils/cryptoUtils";
+import { FetchDoctors } from "@actions/user";
+import config from "@utils/Config";
 
 const HomePage = ({ projectData }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [members, setMembers] = useState([]);
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    role: 1,
+    designation: "Medical Representative",
+    avatar: "/images/avatar.jpg",
+  });
+  const [statistics, setStats] = useState(stats(members, config(projectData)));
   const ui = Config(projectData);
 
   useEffect(() => {
@@ -23,6 +34,27 @@ const HomePage = ({ projectData }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const getUserInfo = DecryptData("empData");
+    if (getUserInfo) {
+      setUserInfo({
+        name: getUserInfo?.name,
+        role: getUserInfo?.role,
+        designation: getUserInfo?.role_name,
+      });
+    }
+
+    const getMembers = async () => {
+      const membersData = await FetchDoctors(getUserInfo?.hash);
+      if (membersData) {
+        setMembers(membersData.data);
+      } else {
+        setMembers([]);
+      }
+    };
+    getMembers();
+  }, []);
+
   if (isLoading) {
     return <LoadingPage ui={ui} loadingtext={"Loading the Dashboard..."} />;
   }
@@ -31,7 +63,7 @@ const HomePage = ({ projectData }) => {
     <div className="min-h-screen bg-white text-gray-800 dark:bg-gray-900 dark:text-white transition-colors duration-300">
       <Header userInfo={userInfo} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        <Dashboard stats={stats} ui={ui} />
+        <Dashboard stats={statistics} ui={ui} />
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
           <div className="w-full md:w-auto">
@@ -67,16 +99,32 @@ const HomePage = ({ projectData }) => {
 
 export default HomePage;
 
-const userInfo = {
-  name: "John Doe",
-  role: "NSM",
-  avatar: "/images/avatar.jpg",
+const stats = (members, ui) => {
+  const total = members.length || 1; // to avoid division by zero
+
+  const activeMembers = members.filter(
+    (member) => member.approved_status === 1
+  );
+  const pendingMembers = members.filter(
+    (member) => member.approved_status === 0
+  );
+
+  const getPercentage = (count) => `${((count / total) * 100).toFixed(1)}%`;
+
+  return [
+    {
+      label: ui.Dashboard.ActiveLabel,
+      value: activeMembers.length,
+      percentage: getPercentage(activeMembers.length),
+    },
+    {
+      label: ui.Dashboard.PendingLabel,
+      value: pendingMembers.length,
+      percentage: getPercentage(pendingMembers.length),
+    },
+  ];
 };
 
-const stats = (ui) => [
-  { label: ui.Dashboard.ActiveLabel, value: 156, change: "+8%" },
-  { label: ui.Dashboard.PendingLabel, value: 7, change: "-3%" },
-];
 
 const members = [
   {

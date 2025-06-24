@@ -1,4 +1,5 @@
 const Banner = ({ bannerImage }) => {
+  
   const src = bannerImage || "/banner.jpg"; // prefer public folder path
 
   return (
