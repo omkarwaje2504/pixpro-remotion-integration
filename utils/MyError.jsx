@@ -1,10 +1,11 @@
+"use client";
 const MyError = async (errorPayload) => {
   const error = {
     name: errorPayload.name || "Error",
     message: errorPayload.message || "An unexpected error occurred",
     stack: errorPayload.stack || "No stack trace available",
   };
-  const projectData = localStorage.getItem("projectHash");
+  const projectData = window.localStorage.getItem("projectHash");
 
   // Extract the error object safely
   const serializedError = {

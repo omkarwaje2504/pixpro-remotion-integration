@@ -2,28 +2,50 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { FaEye, FaEdit, FaDownload, FaFilm, FaSearch } from "react-icons/fa";
+import {
+  FaEye,
+  FaEdit,
+  FaDownload,
+  FaFilm,
+  FaSearch,
+  FaSpinner,
+} from "react-icons/fa";
 import InputField from "./InputField";
 import { ImCross } from "react-icons/im";
 import { FaCheck } from "react-icons/fa";
+import slugify from "slugify";
+import CustomVideoPlayer from "./VideoPlayer";
+import { MdOutlineCancel } from "react-icons/md";
 
-type Member = {
-  id: string;
+interface Member {
+  approved_at: string | null;
+  approved_status: number;
+  code: string | null;
+  created_at: string;
+  download: string;
+  email: string | null;
+  hash: string;
+  mobile: string;
   name: string;
-  imageUrl?: string;
-  approved_status?: number;
-  photo?: { url: string };
-  speciality: string;
-  status: "Active" | "Pending" | "Inactive";
-  dateAdded: string;
-  approvalStatus?: "approved" | "disapproved" | "pending";
-};
+  photo?: {
+    extension: string;
+    name: string;
+    path: string;
+    size: string;
+    url: string;
+    updated_at: string;
+  };
+  values: Record<string, string>;
+  updated_at: string;
+}
 
 type MemberTableProps = {
+  projectData: {
+    features: string[];
+    product_name: string;
+  };
   members: Member[];
-  onPreview: (id: string) => void;
   onEdit: (id: string) => void;
-  onDownload: (id: string) => void;
   approvalState?: boolean;
   onApprove?: (id: string) => void;
   onDisapprove?: (id: string) => void;
@@ -32,10 +54,9 @@ type MemberTableProps = {
 const ITEMS_PER_PAGE = 4;
 
 const MemberTable: React.FC<MemberTableProps> = ({
+  projectData,
   members,
-  onPreview,
   onEdit,
-  onDownload,
   approvalState,
   onApprove,
   onDisapprove,
@@ -44,13 +65,14 @@ const MemberTable: React.FC<MemberTableProps> = ({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>(members);
+  const [downloadingStatus, setDownloadingStatus] = useState<string[]>([]);
+  const [showVideoPlayer, setShowVideoPlayer] = useState("");
 
   useEffect(() => {
     const term = searchTerm.toLowerCase();
     const result = members.filter(
       (m) =>
-        m.name.toLowerCase().includes(term) ||
-        m.speciality.toLowerCase().includes(term),
+        m.name.toLowerCase().includes(term) || (m.mobile || "").includes(term),
     );
     setFilteredMembers(result);
     setCurrentPage(1);
@@ -67,8 +89,87 @@ const MemberTable: React.FC<MemberTableProps> = ({
     }
   };
 
+  function cleanUrl(url: string): string {
+    if (!url) {
+      return "";
+    }
+    const prefixToRemove =
+      "https://pixpro.s3.ap-south-1.amazonaws.com/production";
+    if (url.startsWith(prefixToRemove)) {
+      url = url.slice(prefixToRemove.length);
+    }
+    if (url.startsWith("/")) {
+      url = url.slice(1);
+    }
+    url = url.replace(/%3A/g, ":");
+    return url;
+  }
+
+  const onDownload = async (member: Member) => {
+    const link = member.download;
+    const cleanLink = cleanUrl(link);
+    try {
+      const response = await fetch(cleanLink, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      setDownloadingStatus((prev) => [...prev, member.hash]);
+      // @ts-expect-error this is a dynamic import
+      const FileSaver = (await import("file-saverjs")).default;
+      const contentBlob = await response.blob();
+      switch (projectData.product_name) {
+        case "E-Greeting": {
+          const fileExtension = projectData.features.includes("pdf_ecard")
+            ? "pdf"
+            : "jpg";
+
+          const fileName = `${slugify(member.name || "download", {
+            replacement: "",
+            remove: /[*+~.()'"!:@]/g,
+            lower: false,
+          })}.${fileExtension}`;
+          FileSaver(contentBlob, fileName);
+          setDownloadingStatus((prev) =>
+            prev.filter((hash) => hash !== member.hash),
+          );
+        }
+        case "E-Video": {
+          const fileName = `${slugify(member.name || "download", {
+            replacement: "",
+            remove: /[*+~.()'"!:@]/g,
+            lower: false,
+          })}.mp4`;
+          FileSaver(contentBlob, fileName);
+          setDownloadingStatus((prev) =>
+            prev.filter((hash) => hash !== member.hash),
+          );
+        }
+      }
+    } catch (error) {
+      setDownloadingStatus((prev) => prev.filter((h) => h !== member.hash));
+      console.error("Error saving the video:", error);
+    }
+  };
+
   return (
     <div className="mt-6 text-gray-900 dark:text-white">
+      {showVideoPlayer !== "" && showVideoPlayer !== "undefined" && (
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-10 bg-slate-900/80 dark:bg-slate-900/80 transition-all duration-300 ease-in-out">
+          <div className="flex flex-col items-end">
+            <MdOutlineCancel
+              className="w-10 h-10 fill-white  z-10"
+              onClick={() => setShowVideoPlayer("")}
+            />
+            <CustomVideoPlayer
+              poster="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFZx_ZFEsimWyth-dYgdYyFTbovP44kKiWog&s"
+              src={showVideoPlayer}
+            />
+          </div>
+        </div>
+      )}
       {/* Controls */}
       <div className="flex w-full items-center gap-2 mb-4">
         <div className="w-full">
@@ -114,7 +215,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
         >
           {paginatedMembers.map((member) => (
             <div
-              key={member.id}
+              key={member.hash}
               className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 shadow-lg hover:border-red-500 transition-all"
             >
               <div className="p-2">
@@ -134,23 +235,38 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     )}
                   </div>
                   <div>
-                    <span
-                      className={`text-xs font-medium px-1 py-0.5 rounded ${
-                        member.approved_status === 1
-                          ? "bg-green-500/20 text-green-600 dark:text-green-400"
-                          : member.approved_status === 0
-                            ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                    {projectData?.features.includes("aproval_system") ? (
+                      <span
+                        className={`text-xs font-medium px-1 py-0.5 rounded ${
+                          member.approved_status === 1
+                            ? "bg-green-500/20 text-green-600 dark:text-green-400"
+                            : member.approved_status === 0
+                              ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                              : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        {member.approved_status === 1 ? "Approved" : " Pending"}
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-xs font-medium px-1 py-0.5 rounded ${
+                          member.download
+                            ? "bg-green-500/20 text-green-600 dark:text-green-400"
                             : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
-                      }`}
-                    >
-                      {member.approved_status === 1 ? "Approved" : " Pending"}
-                    </span>
+                        }`}
+                      >
+                        {member.download ? "Completed" : " Pending"}
+                      </span>
+                    )}
                     <h3 className="font-bold text-lg">{member.name}</h3>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      {member.speciality}
+                      {member.mobile}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Added on {new Date(member.dateAdded).toLocaleDateString()}
+                      Added on{" "}
+                      {new Date(
+                        member.updated_at ?? member.created_at,
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -158,49 +274,59 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   <div className="flex justify-between gap-2">
                     <button
                       className="w-full justify-center flex items-center space-x-1 text-xs text-white bg-blue-600 p-2 rounded-sm"
-                      onClick={() => onPreview(member.id)}
+                      onClick={() =>
+                        setShowVideoPlayer(cleanUrl(member.download))
+                      }
                     >
                       <FaEye />
                       <span>Preview</span>
                     </button>
                     <button
                       className="w-full justify-center flex items-center space-x-1 text-xs text-white bg-purple-600 p-2 rounded-sm"
-                      onClick={() => onEdit(member.id)}
+                      onClick={() => onEdit(member.hash)}
                     >
                       <FaEdit />
                       <span>Edit</span>
                     </button>
                     <button
                       className="w-full justify-center flex items-center space-x-1 text-xs text-white bg-green-600 p-2 rounded-sm"
-                      onClick={() => onDownload(member.id)}
+                      onClick={() => onDownload(member)}
                     >
-                      <FaDownload />
-                      <span>Download</span>
+                      {downloadingStatus.includes(member.hash) ? (
+                        <FaSpinner className="animate-spin" />
+                      ) : (
+                        <FaDownload />
+                      )}
+                      <span>
+                        {downloadingStatus.includes(member.hash)
+                          ? "Downloading"
+                          : "Download"}
+                      </span>
                     </button>
                   </div>
                   {approvalState && (
                     <div className="flex-1 mt-1 flex items-center justify-center space-x-2 w-full">
-                      {member.approvalStatus === "approved" ? (
+                      {member.approved_status == 1 ? (
                         <>
                           <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
                             ✅ Approved
                           </span>
                           <button
                             className="flex-1 flex items-center justify-center space-x-1 text-xs text-white bg-red-600 p-2 rounded-sm"
-                            onClick={() => onDisapprove?.(member.id)}
+                            onClick={() => onDisapprove?.(member.hash)}
                           >
                             <ImCross className="fill-white mr-1" />
                             <span>Disapprove</span>
                           </button>
                         </>
-                      ) : member.approvalStatus === "disapproved" ? (
+                      ) : member.approved_status == 0 ? (
                         <>
                           <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
                             ❌ Disapproved
                           </span>
                           <button
                             className="flex-1 flex items-center justify-center space-x-1 text-xs text-white bg-emerald-600 p-2 rounded-sm"
-                            onClick={() => onApprove?.(member.id)}
+                            onClick={() => onApprove?.(member.hash)}
                           >
                             <FaCheck className="fill-white mr-1" />
                             <span>Approve</span>
@@ -210,14 +336,14 @@ const MemberTable: React.FC<MemberTableProps> = ({
                         <>
                           <button
                             className="flex-1 flex items-center justify-center space-x-1 text-xs text-white bg-emerald-600 p-2 rounded-sm"
-                            onClick={() => onApprove?.(member.id)}
+                            onClick={() => onApprove?.(member.hash)}
                           >
                             <FaCheck className="fill-white mr-1" />
                             <span>Approve</span>
                           </button>
                           <button
                             className="flex-1 flex items-center justify-center space-x-1 text-xs text-white bg-red-600 p-2 rounded-sm"
-                            onClick={() => onDisapprove?.(member.id)}
+                            onClick={() => onDisapprove?.(member.hash)}
                           >
                             <ImCross className="fill-white mr-1" />
                             <span>Disapprove</span>
@@ -240,13 +366,13 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
-                  Speciality
+                  Mobile No.
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
                   Date Added
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
-                  Ads Status
+                  Status
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                   Actions
@@ -256,73 +382,99 @@ const MemberTable: React.FC<MemberTableProps> = ({
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-300 dark:divide-gray-800">
               {paginatedMembers.map((member) => (
                 <tr
-                  key={member.id}
+                  key={member.hash}
                   className="hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium">
                       <p>{member.name}</p>
                       <p className="text-xs text-gray-600 dark:text-gray-400 block md:hidden">
-                        {member.speciality}
+                        {member.mobile}
                       </p>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-700 dark:text-gray-300 hidden md:table-cell">
-                    {member.speciality}
+                    {member.mobile}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">
-                    {new Date(member.dateAdded).toLocaleDateString()}
+                    {new Date(
+                      member.updated_at ?? member.created_at,
+                    ).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    <span
-                      className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${
-                        member.status === "Active"
-                          ? "dark:bg-green-900/30 bg-green-600 text-white dark:text-green-400"
-                          : member.status === "Pending"
-                            ? "dark:bg-yellow-900/30 bg-yellow-400 text-black dark:text-yellow-400"
-                            : "dark:bg-gray-900/30 bg-gray-600 text-white dark:text-gray-400"
-                      }`}
-                    >
-                      {member.status}
-                    </span>
+                    {projectData?.features.includes("aproval_system") ? (
+                      <span
+                        className={`text-xs font-medium px-1 py-0.5 rounded ${
+                          member.approved_status === 1
+                            ? "bg-green-500/20 text-green-600 dark:text-green-400"
+                            : member.approved_status === 0
+                              ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                              : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        {member.approved_status === 1 ? "Approved" : " Pending"}
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-xs font-medium px-1 py-0.5 rounded ${
+                          member.download
+                            ? "bg-green-500/20 text-green-600 dark:text-green-400"
+                            : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        {member.download ? "Completed" : " Pending"}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end space-x-4">
-                      <button onClick={() => onPreview(member.id)}>
+                      <button
+                        onClick={() =>
+                          setShowVideoPlayer(cleanUrl(member.download))
+                        }
+                      >
                         <FaEye className="w-5 h-5 fill-yellow-500 hover:bg-gray-700" />
                       </button>
-                      <button onClick={() => onEdit(member.id)}>
+                      <button onClick={() => onEdit(member.hash)}>
                         <FaEdit className="w-5 h-5 fill-purple-500 hover:bg-gray-700" />
                       </button>
-                      <button onClick={() => onDownload(member.id)}>
-                        <FaDownload className="w-5 h-5 fill-blue-500 hover:bg-gray-700" />
+                      <button onClick={() => onDownload(member)}>
+                        {downloadingStatus.includes(member.hash) ? (
+                          <FaSpinner className="animate-spin w-5 h-5 fill-blue-500" />
+                        ) : (
+                          <FaDownload className="w-5 h-5 fill-blue-500 hover:bg-gray-700" />
+                        )}
                       </button>
                       {approvalState && (
                         <>
-                          {member.approvalStatus === "approved" ? (
+                          {member.approved_status == 1 ? (
                             <>
                               <span className="text-xs text-green-600 font-semibold">
                                 ✅ Approved
                               </span>
-                              <button onClick={() => onDisapprove?.(member.id)}>
+                              <button
+                                onClick={() => onDisapprove?.(member.hash)}
+                              >
                                 <ImCross className="fill-red-500 h-5 w-5 hover:bg-gray-700 ml-2" />
                               </button>
                             </>
-                          ) : member.approvalStatus === "disapproved" ? (
+                          ) : member.approved_status == 0 ? (
                             <>
                               <span className="text-xs text-red-600 font-semibold">
                                 ❌ Disapproved
                               </span>
-                              <button onClick={() => onApprove?.(member.id)}>
+                              <button onClick={() => onApprove?.(member.hash)}>
                                 <FaCheck className="fill-green-500 h-5 w-5 hover:bg-gray-700 ml-2" />
                               </button>
                             </>
                           ) : (
                             <>
-                              <button onClick={() => onApprove?.(member.id)}>
+                              <button onClick={() => onApprove?.(member.hash)}>
                                 <FaCheck className="fill-green-500 h-5 w-5 hover:bg-gray-700" />
                               </button>
-                              <button onClick={() => onDisapprove?.(member.id)}>
+                              <button
+                                onClick={() => onDisapprove?.(member.hash)}
+                              >
                                 <ImCross className="fill-red-500 h-5 w-5 hover:bg-gray-700" />
                               </button>
                             </>
@@ -348,19 +500,28 @@ const MemberTable: React.FC<MemberTableProps> = ({
           >
             Prev
           </button>
-          {[...Array(totalPages)].map((_, idx) => (
-            <button
-              key={idx + 1}
-              className={`px-3 py-1 rounded text-sm ${
-                currentPage === idx + 1
-                  ? "bg-red-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
-              onClick={() => handlePageChange(idx + 1)}
-            >
-              {idx + 1}
-            </button>
-          ))}
+          {[...Array(totalPages)].map((_, idx) => {
+            const page = idx + 1;
+            const startPage = Math.max(1, currentPage - 1);
+            const endPage = Math.min(totalPages, startPage + 3);
+
+            // Only render buttons between startPage and endPage
+            if (page < startPage || page > endPage) return null;
+
+            return (
+              <button
+                key={page}
+                className={`px-3 py-1 rounded text-sm ${
+                  currentPage === page
+                    ? "bg-red-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </button>
+            );
+          })}
           <button
             className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
             onClick={() => handlePageChange(currentPage + 1)}

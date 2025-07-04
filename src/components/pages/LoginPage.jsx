@@ -24,7 +24,6 @@ export default function LoginPage({ projectData }) {
 
   useEffect(() => {
     EncryptData("projectData", projectData);
-    
   }, [projectData]);
 
   if (loading) {

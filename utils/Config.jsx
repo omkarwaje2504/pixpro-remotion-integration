@@ -1,4 +1,6 @@
-const config = (projectInfo) => {
+"use client";
+const config = (projectData) => {
+  
   return {
     theme: {
       selectedBg: "bg-gradient-to-br from-red-600 to-red-900",
@@ -29,12 +31,24 @@ const config = (projectInfo) => {
       HomePageSubTitle: "Manage all your cinema advertisements from here",
       HomePageButtonLabel: "Add New Doctor",
       title: "Dashboard Overview",
-      ActiveLabel: "Active Clients",
-      PendingLabel: "Pending Approvals",
+      ActiveLabel: projectData?.features.includes("approval_system")
+        ? "Active Clients"
+        : projectData?.product_name === "E-Video"
+          ? "Videos Generated"
+          : projectData?.product_name === "E-Greeting"
+            ? "Greetings Generated"
+            : "Active Members",
+      PendingLabel: projectData?.features.includes("approval_system")
+        ? "Pending Approvals"
+        : projectData?.product_name === "E-Video"
+          ? "Videos Not Generated"
+          : projectData?.product_name === "E-Greeting"
+            ? "Greetings Not Generated"
+            : "Active Members",
     },
-    ApprovalPageTitle:{
+    ApprovalPageTitle: {
       HomePageTitle: "Cinema Ad Approvals",
-    }
+    },
   };
 };
 

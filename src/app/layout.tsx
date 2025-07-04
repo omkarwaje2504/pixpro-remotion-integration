@@ -4,6 +4,7 @@ import { Metadata, Viewport } from "next";
 export const metadata: Metadata = {
   title: "Remotion and Next.js",
   description: "Remotion and Next.js",
+   metadataBase: new URL("https://www.pixpro.app"),
 };
 
 export const viewport: Viewport = {

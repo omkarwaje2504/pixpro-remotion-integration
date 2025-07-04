@@ -5,7 +5,7 @@
     <div className="mb-8">
       <h2 className="text-xl font-semibold mb-4">{ui.Dashboard.title}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
+        {stats?.map((stat, index) => (
           <div
             key={index}
             className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 border border-gray-300 dark:border-gray-700 shadow transition-all hover:border-red-500"
