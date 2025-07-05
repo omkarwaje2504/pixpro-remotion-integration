@@ -27,9 +27,9 @@ const nextConfig = {
   reactStrictMode: false,
   output: "export",
   distDir:"dist",
-  // experimental: {
-  //   appDir: true,
-  // },
+  experimental: {
+    appDir: true,
+  },
 
   images: {
     remotePatterns: [
