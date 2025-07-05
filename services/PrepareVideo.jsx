@@ -59,6 +59,7 @@ export default function PrepareVideo({ composition }) {
     const { createFFmpeg, fetchFile } = window.FFmpeg;
     const ffmpeg = createFFmpeg({
       log: true,
+      corePath: "/ffmpeg/ffmpeg-core.js",
     });
 
     await ffmpeg.load();
