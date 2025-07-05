@@ -26,7 +26,9 @@ const nextConfig = {
   },
   reactStrictMode: false,
   output: "export",
-  distDir:"dist",
+  distDir: "dist",
+  assetPrefix: "/pixpro-remotion-integration/",
+  basePath: "/pixpro-remotion-integration",
   experimental: {
     appDir: true,
   },
