@@ -1,4 +1,4 @@
-import { registerRoot, useCurrentFrame } from 'remotion';
+import { registerRoot } from 'remotion';
 import MyVideo from './Video';
 import { RemotionRoot } from './Root';
 import React from 'react';
@@ -12,7 +12,7 @@ declare global {
       frame: number;
       width: number;
       height: number;
-      props: any;
+      props: unknown;
     }) => Promise<void>;
   }
 }
@@ -30,7 +30,7 @@ window.renderRemotionFrame = async ({
   frame: number;
   width: number;
   height: number;
-  props: any;
+  props: unknown;
 }) => {
   // Create a hidden container
   const container = document.createElement('div');
@@ -41,10 +41,8 @@ window.renderRemotionFrame = async ({
   document.body.appendChild(container);
 
   const FrameWrapper = () => {
-    const FrameContext = require('remotion').Internals.useCurrentFrame;
-    // Hack: mock current frame
-    require('remotion').Internals.setFrame(frame);
-    return React.createElement(MyVideo, props);
+    // If you need to pass the frame to MyVideo, do it via props
+    return React.createElement(MyVideo, { ...(typeof props === 'object' && props !== null ? props : {}), frame });
   };
 
   const root = ReactDOM.createRoot(container);
