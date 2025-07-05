@@ -90,7 +90,6 @@ export default async function Home({ params }) {
     if (!projectInfo) {
       return <div className="text-red-500">404 – Project Not Found</div>;
     }
-
     return <ApprovalPage projectData={projectInfo} />;
   } catch (error) {
     console.error("Error loading approval page:", error);
