@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@remotion/bundler": "4.0.280",
     "@remotion/cli": "4.0.280",
     "@remotion/google-fonts": "4.0.280",

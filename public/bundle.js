@@ -16,8 +16,12 @@ const MyVideo = ({ frame }) => {
   return /* @__PURE__ */ React.createElement(
     esm.AbsoluteFill,
     {
-      className: "bg-teal-100 text-black text-xl font-bold",
-      style: { opacity }
+      className: " text-xl font-bold",
+      style: {
+        opacity,
+        backgroundColor: `rgba(0, 0, 0, ${(0,esm.interpolate)(frame, [0, 30], [0, 1])})`,
+        color: `rgba(255, 255, 255, ${(0,esm.interpolate)(frame, [0, 30], [0, 1])})`
+      }
     },
     /* @__PURE__ */ React.createElement("h1", { className: "mx-auto my-auto text-4xl" }, "Hello, ", frame, "!")
   );
@@ -34,7 +38,7 @@ const RemotionRoot = () => {
     {
       id: "MyVideo",
       component: Video,
-      durationInFrames: 150,
+      durationInFrames: 40,
       fps: 30,
       width: 1280,
       height: 720,
@@ -59,35 +63,26 @@ var html2canvas_default = /*#__PURE__*/__webpack_require__.n(html2canvas);
 
 
 (0,esm.registerRoot)(RemotionRoot);
-window.renderRemotionFrame = async ({
-  canvas,
-  frame,
-  width,
-  height,
-  props
-}) => {
+window.renderRemotionFrame = async ({ canvas, frame, width, height, props }) => {
   const container = document.createElement("div");
-  container.style.width = width + "px";
-  container.style.height = height + "px";
+  container.style.width = `${width}px`;
+  container.style.height = `${height}px`;
   container.style.position = "fixed";
   container.style.left = "-9999px";
   document.body.appendChild(container);
-  const FrameWrapper = () => {
-    const FrameContext = (__webpack_require__(63947).Internals).useCurrentFrame;
-    (__webpack_require__(63947).Internals).setFrame(frame);
-    return react.createElement(Video, props);
-  };
+  const FrameWrapper = () => react.createElement(Video, {
+    ...typeof props === "object" ? props : {},
+    frame
+    // ✅ pass frame explicitly
+  });
   const root = client.createRoot(container);
   await new Promise((res) => {
     root.render(react.createElement(FrameWrapper));
     setTimeout(res, 50);
   });
-  const resultCanvas = await html2canvas_default()(container, {
-    width,
-    height
-  });
+  const snapshot = await html2canvas_default()(container, { width, height });
   const ctx = canvas.getContext("2d");
-  ctx == null ? void 0 : ctx.drawImage(resultCanvas, 0, 0);
+  ctx == null ? void 0 : ctx.drawImage(snapshot, 0, 0);
   root.unmount();
   container.remove();
 };

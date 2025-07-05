@@ -1,9 +1,9 @@
-import { registerRoot } from 'remotion';
-import MyVideo from './Video';
-import { RemotionRoot } from './Root';
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import html2canvas from 'html2canvas';
+import { registerRoot } from "remotion";
+import { RemotionRoot } from "./Root";
+import MyVideo from "./Video";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import html2canvas from "html2canvas";
 
 declare global {
   interface Window {
@@ -12,52 +12,38 @@ declare global {
       frame: number;
       width: number;
       height: number;
-      props: unknown;
+      props: any;
     }) => Promise<void>;
   }
 }
 
 registerRoot(RemotionRoot);
 
-window.renderRemotionFrame = async ({
-  canvas,
-  frame,
-  width,
-  height,
-  props,
-}: {
-  canvas: HTMLCanvasElement;
-  frame: number;
-  width: number;
-  height: number;
-  props: unknown;
-}) => {
-  // Create a hidden container
-  const container = document.createElement('div');
-  container.style.width = width + 'px';
-  container.style.height = height + 'px';
-  container.style.position = 'fixed';
-  container.style.left = '-9999px';
+// ✅ No Internals.setFrame()
+window.renderRemotionFrame = async ({ canvas, frame, width, height, props }) => {
+  const container = document.createElement("div");
+  container.style.width = `${width}px`;
+  container.style.height = `${height}px`;
+  container.style.position = "fixed";
+  container.style.left = "-9999px";
   document.body.appendChild(container);
 
-  const FrameWrapper = () => {
-    // If you need to pass the frame to MyVideo, do it via props
-    return React.createElement(MyVideo, { ...(typeof props === 'object' && props !== null ? props : {}), frame });
-  };
+  const FrameWrapper = () =>
+    React.createElement(MyVideo, {
+      ...(typeof props === "object" ? props : {}),
+      frame, // ✅ pass frame explicitly
+    });
 
   const root = ReactDOM.createRoot(container);
+
   await new Promise((res) => {
     root.render(React.createElement(FrameWrapper));
     setTimeout(res, 50); // wait for render
   });
 
-  const resultCanvas = await html2canvas(container, {
-    width,
-    height,
-  });
-
-  const ctx = canvas.getContext('2d');
-  ctx?.drawImage(resultCanvas, 0, 0);
+  const snapshot = await html2canvas(container, { width, height });
+  const ctx = canvas.getContext("2d");
+  ctx?.drawImage(snapshot, 0, 0);
 
   root.unmount();
   container.remove();

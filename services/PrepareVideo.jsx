@@ -1,22 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile } from "@ffmpeg/util";
 
 export default function PrepareVideo({ composition }) {
   const canvasRef = useRef(null);
-  const totalFrames = 150;
+  const totalFrames = 30;
   const fps = 30;
   const width = 1280;
   const height = 720;
   const props = { name: "Omkar" };
 
   useEffect(() => {
-    window.Module = {
-      onRuntimeInitialized: () => {
-        console.log("✅ FFmpeg WASM runtime initialized");
-      },
-    };
-
     const loadScript = (src) =>
       new Promise((resolve, reject) => {
         const script = document.createElement("script");
@@ -29,83 +25,65 @@ export default function PrepareVideo({ composition }) {
 
     (async () => {
       try {
-        await loadScript(
-          "https://pixpro-remotion-integration-khsw1si5r-omkarwajes-projects.vercel.app/ffmpeg/ffmpeg.min.js",
-        );
-        await loadScript("/bundle.js"); // ✅ dynamically loads Remotion renderer
+        // ✅ Load Remotion renderer that defines window.renderRemotionFrame
+        await loadScript("/bundle.js");
 
-        console.log("✅ All scripts loaded");
-        handleRender();
+        if (typeof window.renderRemotionFrame !== "function") {
+          throw new Error("❌ renderRemotionFrame not loaded.");
+        }
+
+        // ✅ FFmpeg setup (keep your version)
+        const ffmpeg = new FFmpeg({ log: true });
+        await ffmpeg.load();
+
+        for (let frame = 0; frame < totalFrames; frame++) {
+          console.log(`Rendering frame ${frame}`);
+          await window.renderRemotionFrame({
+            canvas: canvasRef.current,
+            frame,
+            width,
+            height,
+            props,
+            composition,
+          });
+
+          const blob = await new Promise((res) =>
+            canvasRef.current.toBlob(res, "image/png"),
+          );
+          const buffer = await blob.arrayBuffer();
+          await ffmpeg.writeFile(`frame${frame}.png`, new Uint8Array(buffer));
+        }
+
+        console.log("Encoding...");
+        await ffmpeg.exec([
+          "-framerate",
+          "30",
+          "-i",
+          "frame%d.png",
+          "-c:v",
+          "libx264",
+          "-pix_fmt",
+          "yuv420p",
+          "output.mp4",
+        ]);
+
+        const data = await ffmpeg.readFile("output.mp4");
+        const videoBlob = new Blob([data.buffer], { type: "video/mp4" });
+        const url = URL.createObjectURL(videoBlob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "remotion-render.mp4";
+        a.click();
       } catch (err) {
-        console.error("❌ Failed to load script:", err);
+        console.error("❌ Error during rendering:", err);
       }
     })();
 
     return () => {
       delete window.renderRemotionFrame;
-      delete window.Module;
     };
   }, []);
-
-  const handleRender = async () => {
-    console.log("Preparing to render video...");
-    if (!window.renderRemotionFrame) {
-      alert("renderRemotionFrame not found");
-      return;
-    }
-
-    console.log("Starting video rendering...");
-
-    const { createFFmpeg, fetchFile } = window.FFmpeg;
-    const ffmpeg = createFFmpeg({
-      log: true,
-      corePath: "/ffmpeg/ffmpeg-core.js",
-      wasmPath: "/ffmpeg/ffmpeg-core.wasm",
-      workerPath: "/ffmpeg/ffmpeg-core.worker.js",
-    });
-
-    await ffmpeg.load();
-
-    for (let frame = 0; frame < totalFrames; frame++) {
-      console.log("Rendering frame ${frame}");
-      await window.renderRemotionFrame({
-        canvas: canvasRef.current,
-        frame,
-        width,
-        height,
-        props,
-        composition,
-      });
-
-      const blob = await new Promise((resolve) =>
-        canvasRef.current.toBlob(resolve, "image/png"),
-      );
-      const buffer = await blob.arrayBuffer();
-      ffmpeg.FS("writeFile", `frame${frame}.png`, new Uint8Array(buffer));
-    }
-
-    console.log("Encoding video...");
-    await ffmpeg.run(
-      "-framerate",
-      `${fps}`,
-      "-i",
-      "frame%d.png",
-      "-c:v",
-      "libx264",
-      "-pix_fmt",
-      "yuv420p",
-      "output.mp4",
-    );
-
-    const data = ffmpeg.FS("readFile", "output.mp4");
-    const videoBlob = new Blob([data.buffer], { type: "video/mp4" });
-    const url = URL.createObjectURL(videoBlob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "remotion-render.mp4";
-    a.click();
-  };
 
   return (
     <canvas
