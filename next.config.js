@@ -25,8 +25,8 @@ const nextConfig = {
     ];
   },
   reactStrictMode: false,
-  // output: "export",
-  // distDir:"dist",
+  output: "export",
+  distDir:"dist",
   // experimental: {
   //   appDir: true,
   // },
