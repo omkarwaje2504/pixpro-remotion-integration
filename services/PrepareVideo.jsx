@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useRef } from "react";
 
@@ -59,7 +59,9 @@ export default function PrepareVideo({ composition }) {
     const { createFFmpeg, fetchFile } = window.FFmpeg;
     const ffmpeg = createFFmpeg({
       log: true,
-      corePath: "https://pixpro-remotion-integration-khsw1si5r-omkarwajes-projects.vercel.app/ffmpeg/ffmpeg-core.js",
+      corePath: "/ffmpeg/ffmpeg-core.js",
+      wasmPath: "/ffmpeg/ffmpeg-core.wasm",
+      workerPath: "/ffmpeg/ffmpeg-core.worker.js",
     });
 
     await ffmpeg.load();
