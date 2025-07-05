@@ -1,7 +1,7 @@
 
 import { AbsoluteFill, interpolate } from "remotion";
 
-export const MyVideo: React.FC<{ frame: number }> = ({ frame }) => {
+ const MyVideo: React.FC<{ frame: number }> = ({ frame }) => {
   const opacity = interpolate(frame, [0, 30], [0, 1]);
 
   return (
@@ -13,3 +13,6 @@ export const MyVideo: React.FC<{ frame: number }> = ({ frame }) => {
     </AbsoluteFill>
   );
 };
+
+
+export default MyVideo;

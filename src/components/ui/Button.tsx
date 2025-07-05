@@ -1,3 +1,4 @@
+"use client";
 import React, { ReactNode } from "react";
 import { FaSpinner } from "react-icons/fa";
 import config from "@utils/Config";

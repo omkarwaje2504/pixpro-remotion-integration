@@ -25,6 +25,7 @@
       "@components/*": ["src/components/*"],
       "@utils/*": ["utils/*"],
       "@actions/*": ["actions/*"],
+      "@services/*": ["services/*"],
     }
   },
   "include": [
@@ -37,6 +38,6 @@
     "src/app/preview/index.jsx",
     "src/app/preview/index.jsx",
     "dist/types/**/*.ts"
-, "src/components/Input.jsx", "src/components/ui/cropper/DefaultCropper.jsx"  ],
+, "src/components/Input.jsx", "src/components/ui/cropper/DefaultCropper.jsx", "src/components/ui/MemberTable.tsx"  ],
   "exclude": ["node_modules", "remotion.config.ts"]
 }

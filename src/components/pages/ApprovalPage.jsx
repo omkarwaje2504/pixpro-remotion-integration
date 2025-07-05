@@ -67,7 +67,7 @@ const ApprovalPage = ({ projectData }) => {
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
       <Header userInfo={userInfo} />
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <Dashboard stats={renderDashboardStats} ui={ui} />
+        <Dashboard stats={renderDashboardStats(ui)} ui={ui} />
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
           <div className="w-full md:w-auto">
@@ -95,6 +95,7 @@ const ApprovalPage = ({ projectData }) => {
 
         <div className="w-full">
           <ApprovalCard
+            projectData={projectData}
             selectedASM={selectedASM}
             selectedMR={selectedMR}
             selectedRSM={selectedRSM}

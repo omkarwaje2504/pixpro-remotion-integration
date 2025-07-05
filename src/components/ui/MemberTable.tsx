@@ -14,8 +14,8 @@ import InputField from "./InputField";
 import { ImCross } from "react-icons/im";
 import { FaCheck } from "react-icons/fa";
 import slugify from "slugify";
-import CustomVideoPlayer from "./VideoPlayer";
-import { MdOutlineCancel } from "react-icons/md";
+// import CustomVideoPlayer from "./VideoPlayer";
+// import { MdOutlineCancel } from "react-icons/md";
 
 interface Member {
   approved_at: string | null;
@@ -66,7 +66,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>(members);
   const [downloadingStatus, setDownloadingStatus] = useState<string[]>([]);
-  const [showVideoPlayer, setShowVideoPlayer] = useState("");
+  // const [showVideoPlayer, setShowVideoPlayer] = useState("");
 
   useEffect(() => {
     const term = searchTerm.toLowerCase();
@@ -156,7 +156,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
 
   return (
     <div className="mt-6 text-gray-900 dark:text-white">
-      {showVideoPlayer !== "" && showVideoPlayer !== "undefined" && (
+      {/* {showVideoPlayer !== "" && showVideoPlayer !== "undefined" && (
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-10 bg-slate-900/80 dark:bg-slate-900/80 transition-all duration-300 ease-in-out">
           <div className="flex flex-col items-end">
             <MdOutlineCancel
@@ -169,7 +169,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
             />
           </div>
         </div>
-      )}
+      )} */}
       {/* Controls */}
       <div className="flex w-full items-center gap-2 mb-4">
         <div className="w-full">
@@ -274,9 +274,9 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   <div className="flex justify-between gap-2">
                     <button
                       className="w-full justify-center flex items-center space-x-1 text-xs text-white bg-blue-600 p-2 rounded-sm"
-                      onClick={() =>
-                        setShowVideoPlayer(cleanUrl(member.download))
-                      }
+                      // onClick={() =>
+                      //   setShowVideoPlayer(cleanUrl(member.download))
+                      // }
                     >
                       <FaEye />
                       <span>Preview</span>
@@ -429,9 +429,9 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end space-x-4">
                       <button
-                        onClick={() =>
-                          setShowVideoPlayer(cleanUrl(member.download))
-                        }
+                        // onClick={() =>
+                        //   setShowVideoPlayer(cleanUrl(member.download))
+                        // }
                       >
                         <FaEye className="w-5 h-5 fill-yellow-500 hover:bg-gray-700" />
                       </button>

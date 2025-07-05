@@ -1,7 +1,9 @@
+"use client";
 import { FaUser } from "react-icons/fa";
 import MemberTable from "@components/ui/MemberTable";
 
 const ApprovalCard = ({
+  projectData,
   selectedASM,
   selectedRSM,
   selectedMR,
@@ -54,10 +56,9 @@ const ApprovalCard = ({
   return (
     <div className="w-full">
       <MemberTable
-        members={selectedMR.doctors}
-        onPreview={(id) => alert(`Preview Doctor ID: ${id}`)}
+        projectData={projectData}
+        members={selectedMR?.doctors || []}
         onEdit={(id) => alert(`Edit Doctor ID: ${id}`)}
-        onDownload={(id) => alert(`Download Doctor ID: ${id}`)}
         approvalState={true}
         onApprove={handleApproval}
         onDisapprove={handleEdit}
