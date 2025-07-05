@@ -26,7 +26,7 @@ export default function PrepareVideo({ composition }) {
     (async () => {
       try {
         // ✅ Load Remotion renderer that defines window.renderRemotionFrame
-        await loadScript("/bundle.js");
+        await loadScript("/pixpro-remotion-integration/bundle.js");
 
         if (typeof window.renderRemotionFrame !== "function") {
           throw new Error("❌ renderRemotionFrame not loaded.");
