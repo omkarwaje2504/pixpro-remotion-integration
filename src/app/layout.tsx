@@ -4,6 +4,7 @@ import { Metadata, Viewport } from "next";
 export const metadata: Metadata = {
   title: "Remotion and Next.js",
   description: "Remotion and Next.js",
+   metadataBase: new URL("https://www.pixpro.app"),
 };
 
 export const viewport: Viewport = {
@@ -18,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-background">{children}</body>
+    <html lang="en" className="dark">
+      <body>{children}</body>
     </html>
   );
 }
