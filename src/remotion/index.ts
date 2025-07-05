@@ -12,7 +12,7 @@ declare global {
       frame: number;
       width: number;
       height: number;
-      props: any;
+      props: unknown;
     }) => Promise<void>;
   }
 }
