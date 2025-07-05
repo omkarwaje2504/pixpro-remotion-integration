@@ -30,7 +30,7 @@ export default function PrepareVideo({ composition }) {
     (async () => {
       try {
         await loadScript(
-          "https://pixpro-video-generation.s3.ap-south-1.amazonaws.com/ffmpeg/ffmpeg.min.js",
+          "https://pixpro-remotion-integration-khsw1si5r-omkarwajes-projects.vercel.app/ffmpeg/ffmpeg.min.js",
         );
         await loadScript("/bundle.js"); // ✅ dynamically loads Remotion renderer
 
@@ -59,7 +59,7 @@ export default function PrepareVideo({ composition }) {
     const { createFFmpeg, fetchFile } = window.FFmpeg;
     const ffmpeg = createFFmpeg({
       log: true,
-      corePath: "/ffmpeg/ffmpeg-core.js",
+      corePath: "https://pixpro-remotion-integration-khsw1si5r-omkarwajes-projects.vercel.app/ffmpeg/ffmpeg-core.js",
     });
 
     await ffmpeg.load();
